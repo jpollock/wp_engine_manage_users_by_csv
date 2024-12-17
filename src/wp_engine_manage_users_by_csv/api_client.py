@@ -61,25 +61,21 @@ def resolve_accounts_and_installs(client: WPEngineAPI, users_data: List[Dict]) -
             continue
             
         # Resolve install IDs for add action
-        if user['install_names'] == ['']:
-            continue
+        install_ids = []
+        for install_name in user['install_names']:
+            if install_name:  # Skip empty names
+                install_id = installs.get(install_name)
+                if install_id:
+                    install_ids.append(install_id)
+                else:
+                    unresolved_installs.add(install_name)
         
-            install_ids = []
-            for install_name in user['install_names']:
-                if install_name:  # Skip empty names
-                    install_id = installs.get(install_name)
-                    if install_id:
-                        install_ids.append(install_id)
-                    else:
-                        print(install_name)
-                        unresolved_installs.add(install_name)
-            
-            if not unresolved_installs:
-                result['users'].append({
-                    **user,
-                    'account_id': account_id,
-                    'install_ids': install_ids
-                })
+        if not unresolved_installs:
+            result['users'].append({
+                **user,
+                'account_id': account_id,
+                'install_ids': install_ids
+            })
             
     # Add any resolution errors
     if unresolved_accounts:
@@ -115,6 +111,11 @@ def process_users(client: WPEngineAPI, users: List[Dict], dryrun: bool) -> bool:
         try:
             existing_users = get_existing_users(client, user['account_id'])
             
+            # Convert roles list to string if it's a list
+            roles = user['roles']
+            if isinstance(roles, list):
+                roles = ','.join(roles)
+            
             if user['action'] == 'remove':
                 # Handle user removal
                 if user['email'] in existing_users:
@@ -144,7 +145,7 @@ def process_users(client: WPEngineAPI, users: List[Dict], dryrun: bool) -> bool:
                             {
                                 'first_name': user['first_name'],
                                 'last_name': user['last_name'],
-                                'roles': user['roles'],
+                                'roles': roles,
                                 'installs': user['install_ids']
                             }
                         )
@@ -160,12 +161,13 @@ def process_users(client: WPEngineAPI, users: List[Dict], dryrun: bool) -> bool:
                             user['account_id'],
                             {
                                 'user': {
+                                    'account_id': user['account_id'],
                                     'first_name': user['first_name'],
                                     'last_name': user['last_name'],
-                                    'email': user['email']
-                                },
-                                'roles': user['roles'],
-                                'installs': user['install_ids']
+                                    'email': user['email'],
+                                    'roles': roles,
+                                    'install_ids': user['install_ids']
+                                }
                             }
                         )
                     log_action(
