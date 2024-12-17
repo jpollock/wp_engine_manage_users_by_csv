@@ -1,0 +1,5 @@
+action,account_name,first_name,last_name,email,roles,install_names
+add,myaccount,John,Doe,john@example.com,admin,"install1,install2"
+add,myaccount,Jane,Smith,jane@example.com,"admin,collaborator","install1,install3"
+remove,myaccount,Bob,Johnson,bob@example.com,collaborator,install4
+add,anotheraccount,Alice,Brown,alice@example.com,collaborator,install5

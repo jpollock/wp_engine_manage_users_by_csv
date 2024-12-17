@@ -1,0 +1,4 @@
+wp-engine-api-python
+python-dotenv
+click
+pandas
